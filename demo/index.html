@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sigil — agent-driven UI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+
+<div class="page">
+
+  <!-- ─── HEADER ─── -->
+  <header class="top">
+    <div class="brand">
+      <div class="mark">s</div>
+      <div class="name">sigil<span>/core</span></div>
+      <div class="ver">0.1.0</div>
+    </div>
+    <nav class="links">
+      <a href="#demo">Demo</a>
+      <a href="#manifest">Manifest</a>
+      <a href="#discovery">Discovery</a>
+      <a href="#install">Install</a>
+      <div id="agent-source-toggle" class="agent-source-toggle" role="tablist" aria-label="Agent source"></div>
+    </nav>
+  </header>
+
+  <!-- ─── HERO ─── -->
+  <section class="hero">
+    <div>
+      <div class="eyebrow">TYPESCRIPT · STAGE-3 DECORATORS · PRE-RELEASE</div>
+      <h1>Let an LLM agent drive a real UI <em>by emitting structured components instead of free-form text.</em></h1>
+      <p class="lede">
+        Declare components with decorators. Sigil hands the model a typed
+        catalogue, parses its JSON reply, validates against your schema, and
+        renders web components into the DOM.
+      </p>
+    </div>
+    <div class="hero-meta">
+      <div class="row"><div class="l">Status</div><div class="v ok"><span class="status-dot"></span>running</div></div>
+      <div class="row"><div class="l">Components</div><div class="v"><span id="component-count">…</span> registered</div></div>
+      <div class="row"><div class="l">Tokens</div><div class="v"><span id="token-count">…</span> design tokens</div></div>
+      <div class="row"><div class="l">Manifest</div><div class="v"><span id="manifest-budget-readout">minimal</span></div></div>
+      <div class="row"><div class="l">Agent</div><div class="v" id="agent-meta-line">fake</div></div>
+    </div>
+  </section>
+
+  <div id="key-banner" class="key-banner"></div>
+
+  <!-- ─── DEMO ─── -->
+  <section class="demo-section" id="demo">
+    <div class="demo-label"><span>Try it</span><span class="line"></span><span id="scenario-label">scenario 01 of 5</span></div>
+
+    <form id="prompt-form" class="prompt-input" autocomplete="off">
+      <span class="glyph">›</span>
+      <input id="prompt-input" type="text" autocomplete="off" spellcheck="false"
+             placeholder="Ask the agent for finance UI…" />
+      <button class="send" id="send-btn" type="submit">Run <span class="kbd">↵</span></button>
+    </form>
+
+    <div class="chips" id="chips"></div>
+
+    <div id="agent-status" class="agent-status-line"></div>
+
+    <div class="split">
+      <div class="panel">
+        <div class="panel-head">
+          <span>Agent reply · <span class="tag">application/json</span></span>
+          <span id="json-stat">—</span>
+        </div>
+        <pre class="json swap-target" id="json-pane"></pre>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <span>SigilRenderer · <span class="tag" id="render-count">— elements</span></span>
+          <span id="render-stat">—</span>
+        </div>
+        <div class="panel-body">
+          <div class="render-stack swap-target" id="render-pane"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="demo-foot">
+      <span><span class="dot"></span><span id="foot-stat">—</span> · <span class="pass" id="foot-validated">validated against registry</span></span>
+      <span id="foot-meta">scenario 01 of 5 · finance demo</span>
+    </div>
+  </section>
+
+  <!-- ─── MANIFEST ─── -->
+  <section class="manifest-strip" id="manifest">
+    <div class="row">
+      <div class="manifest-lhs">
+        <div class="lbl-sm">SYSTEM PROMPT</div>
+        <h2>What the model sees.</h2>
+        <p>
+          One compact string, computed from your decorators and injected into
+          the system prompt. Three verbosity budgets trade token cost against
+          schema detail.
+        </p>
+        <div class="budget-pills" id="budget-pills">
+          <button type="button" class="pill active" data-budget="minimal">minimal</button>
+          <button type="button" class="pill" data-budget="standard">standard</button>
+          <button type="button" class="pill" data-budget="full">full</button>
+        </div>
+        <div class="manifest-stats">
+          <span id="manifest-size">— chars</span>
+          <span id="manifest-tokens">~— tokens</span>
+        </div>
+      </div>
+      <pre id="manifest-text" class="manifest"></pre>
+    </div>
+  </section>
+
+  <!-- ─── DISCOVERY ─── -->
+  <section class="discovery-section" id="discovery">
+    <div class="row">
+      <div>
+        <div class="lbl-sm">RUNTIME DISCOVERY</div>
+        <h2>Add a file, it appears.</h2>
+        <p>
+          The browser fetches <code>/api/components</code> at boot. The dev
+          server expands the glob from <code>sigil.config.ts</code>, returns
+          the resolved set, and the browser dynamic-imports each module — no
+          codegen, no committed barrel.
+        </p>
+      </div>
+      <div id="discovery-panel" class="discovery-panel">
+        <p class="muted">Loading…</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── INSTALL ─── -->
+  <section class="install" id="install">
+    <div class="row">
+      <div>
+        <div class="lbl-sm">SIXTY SECONDS</div>
+        <h2>Try it locally.</h2>
+        <p>
+          Clone, install, run. Add <code>ANTHROPIC_API_KEY</code> to the
+          environment to swap the fake agent for the real Claude one.
+        </p>
+      </div>
+      <div>
+        <div class="cmd">
+          <span><span class="prompt-glyph">$</span>npm install</span>
+          <button class="copy" type="button" data-copy="npm install">Copy</button>
+        </div>
+        <div class="cmd">
+          <span><span class="prompt-glyph">$</span>npm run dev</span>
+          <button class="copy" type="button" data-copy="npm run dev">Copy</button>
+        </div>
+        <div class="install-note">
+          Then open <span class="install-url">http://localhost:5173/demo/</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── FOOTER ─── -->
+  <footer class="bottom">
+    <div class="lhs">
+      <span>MIT licence</span>
+      <span>0.1.0 · pre-publish</span>
+      <span id="footer-tests">tests —</span>
+    </div>
+    <div><span class="muted">scroll-driven · no framework runtime</span></div>
+  </footer>
+
+  <!-- Off-screen helpers kept for compatibility with older bootstrap code -->
+  <div id="thread" hidden></div>
+  <div id="clear-thread" hidden></div>
+
+</div>
+
+<script type="module" src="../dist/demo/app.js"></script>
+</body>
+</html>
