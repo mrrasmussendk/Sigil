@@ -35,7 +35,32 @@ function toKebabCase(value) {
 }
 
 function isValidCustomElementTag(tag) {
-  return /^[a-z][a-z0-9._-]*-[a-z0-9._-]+$/.test(tag);
+  if (typeof tag !== "string" || tag.length < 2) {
+    return false;
+  }
+  if (!tag.includes("-")) {
+    return false;
+  }
+  const validChar = (char) =>
+    (char >= "a" && char <= "z") ||
+    (char >= "0" && char <= "9") ||
+    char === "." ||
+    char === "_" ||
+    char === "-";
+  if (!(tag[0] >= "a" && tag[0] <= "z")) {
+    return false;
+  }
+  let hasNonDashAfter = false;
+  for (let i = 0; i < tag.length; i += 1) {
+    const char = tag[i];
+    if (!validChar(char)) {
+      return false;
+    }
+    if (char !== "-" && i > tag.indexOf("-")) {
+      hasNonDashAfter = true;
+    }
+  }
+  return hasNonDashAfter;
 }
 
 function truncateDescription(text = "") {
@@ -196,7 +221,7 @@ export function slot(description, options = {}) {
     }
     const name = slotNameFromFieldName(String(context.name));
     context.addInitializer(function () {
-      const ctor = context.kind === "class" ? this : this.constructor;
+      const ctor = this.constructor;
       const meta = ensureClassMeta(ctor);
       meta.slots[name] = { description, required: options.required ?? false };
       const declaration = ComponentRegistry.getInternal(meta.tag);
@@ -303,7 +328,7 @@ function validateNode(node) {
 
 function renderNode(node, parent) {
   const validation = validateNode(node);
-  const element = validation.valid ? createOrFallbackElement(node.component) : createOrFallbackElement(node.component);
+  const element = createOrFallbackElement(node.component);
   if (node.props && validation.valid) {
     for (const [name, value] of Object.entries(node.props)) {
       element[name] = value;
@@ -368,11 +393,11 @@ export const AgentRuntime = {
         "You may respond using structured UI components in addition to or instead of plain text.",
         "When a visual component would communicate information more clearly, prefer it.",
         "",
-        'Emit components as JSON with this shape:',
-        '  { "component": "tag-name", "props": {}, "children": "slot text or nested nodes" }',
+        "Emit components as JSON with this shape:",
+        "  { \"component\": \"tag-name\", \"props\": {}, \"children\": \"slot text or nested nodes\" }",
         "",
         "For multiple root-level components:",
-        '  { "components": [ ...nodes ] }',
+        "  { \"components\": [ ...nodes ] }",
         ""
       ].join("\n")
       : "";
