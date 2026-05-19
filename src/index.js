@@ -13,7 +13,9 @@ function inferTypeFromValue(value, options = {}) {
     return { type: "enum", values: [...options.values] };
   }
   if (Array.isArray(value)) {
-    return { type: "array", items: typeof value[0] === "string" ? "string" : typeof value[0] };
+    const first = value[0];
+    const itemType = first === undefined ? "string" : (typeof first === "string" ? "string" : typeof first);
+    return { type: "array", items: itemType };
   }
   if (typeof value === "string") {
     return { type: "string" };
@@ -64,7 +66,8 @@ function isValidCustomElementTag(tag) {
 }
 
 function truncateDescription(text = "") {
-  const firstSentence = text.split(".")[0] || text;
+  const match = String(text).match(/(.+?[.!?])(\s|$)/);
+  const firstSentence = match ? match[1] : text;
   return firstSentence.slice(0, 60).trim();
 }
 
@@ -121,7 +124,7 @@ export class ComponentRegistryImpl {
             .map(([name, p]) => {
               const type = p.type === "enum" ? p.values.join("|") : p.type;
               const range = p.type === "number" && (p.min !== undefined || p.max !== undefined)
-                ? `, ${p.min ?? "-∞"}–${p.max ?? "∞"}`
+                ? `, ${p.min ?? "-Infinity"}–${p.max ?? "Infinity"}`
                 : "";
               return `${name}(${type}${p.required ? ", required" : ""}${range})`;
             })
@@ -240,8 +243,10 @@ export function agent(description) {
     if (context.kind !== "class") {
       throw new Error("@agent can only be used on classes");
     }
-    const isHTMLElementSubclass =
-      typeof globalThis.HTMLElement === "undefined" || target.prototype instanceof globalThis.HTMLElement;
+    if (typeof globalThis.HTMLElement === "undefined") {
+      throw new Error("@agent requires HTMLElement to be available");
+    }
+    const isHTMLElementSubclass = target.prototype instanceof globalThis.HTMLElement;
     if (!isHTMLElementSubclass) {
       throw new Error("@agent target must extend HTMLElement");
     }
@@ -278,6 +283,7 @@ function parseResponse(text) {
       }
     }
   } catch (_error) {
+    // Intentionally ignored: non-JSON output should be treated as plain text.
   }
   return { type: "text", content: text };
 }
