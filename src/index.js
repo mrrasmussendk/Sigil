@@ -170,13 +170,13 @@ export function tag(name) {
   if (!isValidCustomElementTag(name)) {
     throw new Error(`Invalid custom element tag: ${name}`);
   }
-  return function (_target, context) {
+  return function (target, context) {
     if (context.kind !== "class") {
       throw new Error("@tag can only be used on classes");
     }
     context.addInitializer(function () {
-      TAG_META.set(this, name);
-      const meta = ensureClassMeta(this);
+      TAG_META.set(target, name);
+      const meta = ensureClassMeta(target);
       meta.tag = name;
     });
   };
@@ -251,11 +251,12 @@ export function agent(description) {
       throw new Error("@agent target must extend HTMLElement");
     }
     context.addInitializer(function () {
-      const tagName = TAG_META.get(target) ?? toKebabCase(context.name);
+      const existingMeta = ensureClassMeta(target);
+      const tagName = TAG_META.get(target) ?? existingMeta.tag ?? toKebabCase(context.name);
       if (!isValidCustomElementTag(tagName)) {
         throw new Error(`Invalid custom element tag: ${tagName}`);
       }
-      const meta = ensureClassMeta(target);
+      const meta = existingMeta;
       meta.description = description;
       meta.tag = tagName;
       meta.ctor = target;
@@ -299,7 +300,8 @@ function validateNode(node) {
   const props = node.props ?? {};
   for (const [name, propDecl] of Object.entries(declaration.props)) {
     const value = props[name];
-    if (propDecl.required && (value === undefined || value === null || value === "")) {
+    const isMissing = value === undefined || value === null || (propDecl.type === "string" && value === "");
+    if (propDecl.required && isMissing) {
       errors.push({ prop: name, message: "Required prop missing", severity: "error" });
       continue;
     }
